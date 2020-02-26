@@ -140,3 +140,33 @@ def percBar(df,predictor,target,predictor_mask='',target_mask='',predictor_value
         plt.title('Distribution of {} within {}'.format(target_mask,predictor_mask))
     plt.xticks(rotation=90)
     plt.savefig('visualizations/exploration/perc{}by{}.png'.format(predictor,target),dpi=dpi,bbox_inches='tight')
+
+def mutualInformation(x,y,axis=0):
+    xmask = pd.isnull(x)
+    ymask = pd.isnull(y)
+    x = x[np.logical_or(xmask,ymask) == False]
+    y = y[np.logical_or(xmask,ymask) == False]
+    explan = np.unique(x)
+    response = np.unique(y)
+    px = list(map(lambda i: i/len(x),np.unique(x,return_counts=True)[1]))
+    py = list(map(lambda i: i/len(y),np.unique(y,return_counts=True)[1]))
+    pxy = pd.DataFrame(columns=range(0,len(response)),index=range(0,len(explan)))
+    for i in range(0,len(response)):
+        for j in range(0,len(explan)):
+            # In the following dataframe, [i][j] is the probability that condition j and condition i are both true.
+            # i and j correspond both response/explan and py/px, respectively.
+            try: # np.unique with return_counts=True returns an array with the format [[False, True],[number of False,number of True]]
+                pxy[i][j] = np.unique(np.logical_and(x == explan[j],y==response[i]),return_counts=True)[1][1]/len(x)
+            except IndexError: # Catches cases where p(x, y) is 0 or 1.
+                if(np.unique(np.logical_and(x == explan[j],y==response[i]))):
+                    pxy[i][j] = 1
+                else:
+                    pxy[i][j] = 0
+    mi = 0 # Container for mutual information.
+    for k in range(0,len(response)):
+        for l in range(0,len(explan)):
+            try:
+                mi += float(pxy[k][l]*math.log2(pxy[k][l]/(px[l]*py[k])))
+            except ValueError: # Catches cases where p(x, y) is 0. The convention is to treat 0log0 as 0, since xlogx approaches 0 asymptotically as x approaches 0.
+                continue
+    return mi
