@@ -141,7 +141,13 @@ def percBar(df,predictor,target,predictor_mask='',target_mask='',predictor_value
     plt.xticks(rotation=90)
     plt.savefig('visualizations/exploration/perc{}by{}.png'.format(predictor,target),dpi=dpi,bbox_inches='tight')
 
-def mutualInformation(x,y,axis=0):
+# Mutual Information
+# Used for: Correlation between categorical variables
+
+# This function takes two lists or arrays, then spits out the mutual information between the two variables contained therein.
+# Mutual information is a symmetric measure of association. It indicates how much the uncertainty of each variable is reduced by knowledge of the other.
+
+def mutualInformation(x,y):
     xmask = pd.isnull(x)
     ymask = pd.isnull(y)
     x = x[np.logical_or(xmask,ymask) == False]
